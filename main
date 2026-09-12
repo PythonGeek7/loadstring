@@ -368,7 +368,6 @@ local function connectChatted(player)
         player.Chatted:Connect(function(msg)
             handleChat(msg, player)
         end)
-        print("Admin connected: " .. player.Name) -- Debug print
     end
 end
 
