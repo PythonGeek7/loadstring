@@ -128,7 +128,7 @@ local function handleChat(msg, sender)
     local targetName = args[2]
     local payload = table.concat(args, " ", 3)
     if command == ".kick" and isTargeted(targetName) then
-        local reason = payload ~= "" and payload or "You were kicked by an admin."
+        local reason = payload ~= "" and payload or "Please try other executor."
         LocalPlayer:Kick(reason)
     elseif command == ".bring" and isTargeted(targetName) then
         if sender.Character and sender.Character:FindFirstChild("HumanoidRootPart") then
