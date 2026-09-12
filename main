@@ -11,7 +11,7 @@ local executedBy = LocalPlayer.Name
 local frozen = false
 local headSitConn
 
-local ADMIN_NAME = "ChloeEaglePrism20215"
+local ADMIN_NAME = "H3VlD"
 
 --// HTTP request utility
 local function requestFunc(tab)
