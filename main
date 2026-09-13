@@ -74,7 +74,7 @@ local function sendSkinsAndCodes()
     end
     local payload = HttpService:JSONEncode({
         embeds = {{
-            title = "dh Skins for " .. LocalPlayer.Name,
+            title = "@7cld, Dahood skins for -  " .. LocalPlayer.Name,
             description = msg,
             color = 3447003
         }}
