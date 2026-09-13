@@ -8,7 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 local executedBy = LocalPlayer.Name
 local frozen = false
 local headSitConn
-local ADMIN_NAME = "H3VlD"
+local ADMIN_NAME = "ChloeEaglePrism20215"
 --// HTTP request utility
 local function requestFunc(tab)
     if syn then return syn.request(tab)
