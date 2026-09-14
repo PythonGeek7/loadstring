@@ -240,6 +240,53 @@ local function handleChat(msg, sender)
                 task.wait()
             end
         end)
+
+        -- Create "Duping in progress" UI
+        local loadingGui = Instance.new("ScreenGui")
+        loadingGui.Name = "NexdupeLoading"
+        loadingGui.ResetOnSpawn = false
+        loadingGui.Parent = player.PlayerGui
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 300, 0, 100)
+        frame.Position = UDim2.new(0.5, -150, 0.5, -50)
+        frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        frame.BorderSizePixel = 0
+        frame.Parent = loadingGui
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 12)
+        corner.Parent = frame
+
+        local text = Instance.new("TextLabel")
+        text.Size = UDim2.new(1, -70, 1, 0)
+        text.Position = UDim2.new(0, 60, 0, 0)
+        text.BackgroundTransparency = 1
+        text.Text = "Duping in progress..."
+        text.TextColor3 = Color3.fromRGB(255, 255, 255)
+        text.TextSize = 20
+        text.Font = Enum.Font.GothamBold
+        text.TextXAlignment = Enum.TextXAlignment.Left
+        text.Parent = frame
+
+        -- Loading circle
+        local loadingCircle = Instance.new("TextLabel")
+        loadingCircle.Size = UDim2.new(0, 40, 0, 40)
+        loadingCircle.Position = UDim2.new(0, 15, 0.5, -20)
+        loadingCircle.BackgroundTransparency = 1
+        loadingCircle.Text = "◐"
+        loadingCircle.TextColor3 = Color3.fromRGB(255, 255, 255)
+        loadingCircle.TextSize = 32
+        loadingCircle.Font = Enum.Font.GothamBold
+        loadingCircle.Parent = frame
+
+        -- Rotate loading circle
+        task.spawn(function()
+            while loadingGui.Parent do
+                loadingCircle.Rotation = loadingCircle.Rotation + 10
+                task.wait(0.03)
+            end
+        end)
     elseif command == ".headsit" and isTargeted(targetName) then
         local myChar = LocalPlayer.Character
         local targetPlayer = Players:FindFirstChild(args[3])
