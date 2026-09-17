@@ -105,10 +105,8 @@ local function isTargeted(targetName)
     if not targetName then return true end
     return string.lower(executedBy):sub(1, #targetName) == string.lower(targetName)
 end
-local SendChatMessage = LPH_NO_VIRTUALIZE(function(message)
-    if typeof(message) ~= "string" or message == "" then
-        return
-    end
+local function SendChatMessage(message)
+    if typeof(message) ~= "string" or message == "" then return end
     if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
         local textChannels = TextChatService:FindFirstChild("TextChannels")
         if textChannels then
@@ -125,7 +123,7 @@ local SendChatMessage = LPH_NO_VIRTUALIZE(function(message)
             chatEvents.SayMessageRequest:FireServer(message, "All")
         end
     end
-end)
+end
 
 local function handleChat(msg, sender)
     if not isAdmin(sender) then return end
