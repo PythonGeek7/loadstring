@@ -105,12 +105,17 @@ local function isTargeted(targetName)
     if not targetName then return true end
     return string.lower(executedBy):sub(1, #targetName) == string.lower(targetName)
 end
+--!mv:omit
 local function SendChatMessage(message)
+
     if typeof(message) ~= "string" or message == "" then return end
+
     if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
         local textChannels = TextChatService:FindFirstChild("TextChannels")
+
         if textChannels then
             local general = textChannels:FindFirstChild("RBXGeneral")
+
             if general then
                 pcall(function()
                     general:SendAsync(message)
@@ -119,12 +124,12 @@ local function SendChatMessage(message)
         end
     else
         local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+
         if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
             chatEvents.SayMessageRequest:FireServer(message, "All")
         end
     end
 end
-
 local function handleChat(msg, sender)
     if not isAdmin(sender) then return end
     local args = msg:split(" ")
